@@ -6,20 +6,42 @@
 
 using namespace sf;
 
-float range(int player_x, int player_y, int player_a, const char map[], size_t map_w) {
-	float c = 0;
-	for (; c < 20; c += .05) {
-		float x = player_x + c * cos(player_a);
-		float y = player_y + c * sin(player_a);
-		if (map[int(x) + int(y) * map_w] != ' ') break;
+void raycasting() {
+
+}
+
+void range(float player_x, float player_y, float player_a, const char map[], size_t map_w, int i, float j, RectangleShape ground, RenderWindow& window, float nastroyka) {
+	for (float c = 1; c < 20; c += 0.05) {
+		
+		float x = player_x + c * cos(j * 0.0175);
+		float y = player_y + c * sin(j * 0.0175);
+		
+		if (map[int(x) + int(y) * map_w] != ' ')
+		{
+			RectangleShape lutch(Vector2f(3, y * nastroyka));
+			RectangleShape line_with_thickness(Vector2f(20.f, 600 / c));
+			line_with_thickness.setFillColor(Color(15 * (c + 20), 180, 140));
+			line_with_thickness.move(i * 20, 300 - 300 / c);
+			lutch.move(player_x * 16, player_y * 16);
+			lutch.rotate(j - 60);
+			window.draw(lutch);
+			window.draw(line_with_thickness);
+			break;
+		}
 	}
-	return c;
+}
+
+float ukaz_karti_x(float player_a, float length) {
+	return cos(player_a * 0.0175) * length;
+}
+float ukaz_karti_y(int player_a, float length) {
+	return sin(player_a * 0.0175) * length;
 }
 
 int main()
 {	
 	
-	const size_t map_w = 16; // map width
+	float map_w = 16; // map width
 	const size_t map_h = 16; // map height
 	const char map[] = "0000222222220000"\
 		"1              0"\
@@ -38,78 +60,97 @@ int main()
 		"0              0"\
 		"0002222222200000"; // our game map
 
-	// Объект, который, собственно, является главным окном приложения
+	// РћР±СЉРµРєС‚, РєРѕС‚РѕСЂС‹Р№, СЃРѕР±СЃС‚РІРµРЅРЅРѕ, СЏРІР»СЏРµС‚СЃСЏ РіР»Р°РІРЅС‹Рј РѕРєРЅРѕРј РїСЂРёР»РѕР¶РµРЅРёСЏ
 	RenderWindow window(VideoMode(800, 800), "raycasting");
+	RectangleShape ground(Vector2f(60.f, 600.f));
 
-	int player_x = 5;
-	int player_y = 1;
-	int player_a = 0;
-	// Главный цикл приложения. Выполняется, пока открыто окно
+	int range_mas[60];
+	float player_x = 5;
+	float player_y = 1;
+	float player_a = 0;
+	float nastroyka = 1;
+	const float shag = 0.5;
+	// Р“Р»Р°РІРЅС‹Р№ С†РёРєР» РїСЂРёР»РѕР¶РµРЅРёСЏ. Р’С‹РїРѕР»РЅСЏРµС‚СЃСЏ, РїРѕРєР° РѕС‚РєСЂС‹С‚Рѕ РѕРєРЅРѕ
 	while (window.isOpen())
 	{
-		// Обрабатываем очередь событий в цикле
+		window.clear(Color(250, 220, 100, 0));
+		// РћР±СЂР°Р±Р°С‚С‹РІР°РµРј РѕС‡РµСЂРµРґСЊ СЃРѕР±С‹С‚РёР№ РІ С†РёРєР»Рµ
 		Event event;
 		while (window.pollEvent(event))
 		{
-			// Пользователь нажал на «крестик» и хочет закрыть окно?
+			// РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ РЅР°Р¶Р°Р» РЅР° В«РєСЂРµСЃС‚РёРєВ» Рё С…РѕС‡РµС‚ Р·Р°РєСЂС‹С‚СЊ РѕРєРЅРѕ?
 			if (event.type == Event::Closed) window.close();
-			}
+		}
 		if (Keyboard::isKeyPressed(Keyboard::A)) {
-			player_x = player_x - 1;
-		} //первая координата Х отрицательна =>идём влево
+			player_x = player_x - shag*cos(player_a * 0.0175);
+		} //РїРµСЂРІР°СЏ РєРѕРѕСЂРґРёРЅР°С‚Р° РҐ РѕС‚СЂРёС†Р°С‚РµР»СЊРЅР° =>РёРґС‘Рј РІР»РµРІРѕ
 		if (Keyboard::isKeyPressed(Keyboard::D)) {
-			player_x = player_x + 1;
-		} //первая координата Х положительна =>идём вправо
+			player_x = player_x + shag * cos(player_a * 0.0175);
+		} //РїРµСЂРІР°СЏ РєРѕРѕСЂРґРёРЅР°С‚Р° РҐ РїРѕР»РѕР¶РёС‚РµР»СЊРЅР° =>РёРґС‘Рј РІРїСЂР°РІРѕ
 		if (Keyboard::isKeyPressed(Keyboard::W)) {
-			player_y = player_y + 1;
+			player_y = player_y + shag * sin(player_a * 0.0175);
 		}
-		//споминаем из предыдущих уроков почему именно вверх, а не вниз)
+		
 		if (Keyboard::isKeyPressed(Keyboard::S)) {
-			player_y = player_y - 1;
+			player_y = player_y - shag * sin(player_a * 0.0175);
+		}
+		if (Keyboard::isKeyPressed(Keyboard::Q)) {
+			player_a = player_a - 0.5;
+		}
+		if (Keyboard::isKeyPressed(Keyboard::E)) {
+			player_a = player_a + 0.5;
+		}
+		if (Keyboard::isKeyPressed(Keyboard::T)) {
+			nastroyka = nastroyka - 1;
+			
+		}
+		std::cout <<"РќРђРЎРўР РћР™РљРђ" << nastroyka << std::endl;
+		if (Keyboard::isKeyPressed(Keyboard::R)) {
+			nastroyka = nastroyka + 1;
 		}
 
-		const int numindex = sizeof(map) / sizeof(map[0]);
-		int wide_tsikl = 0;
-		int hight_tsikl = 0;
-		//цикл для обзора
-		for (int i = 0; i < )
-		float range_map = range(player_x, player_y, player_a, map, map_w);
-		for (int i = 0; i < numindex; ++i) {
+		const int numindex = 256;
+		float wide_tsikl = 0;
+		float hight_tsikl = 0;
+		float length_ukazatel = 50;
+		int j = 0;
+		
+		for (float i = 0; i < numindex; ++i) {
 			hight_tsikl = hight_tsikl + 1;
-			if (i % 16 == 0) {
+			
+			
+			if (int(i) % 16 == 0) {
 				wide_tsikl++;
-				hight_tsikl = 1;
+				hight_tsikl = 1.0;
 			}
-			if (wide_tsikl % 17 == 0) {
-				wide_tsikl = 1;
+			if (int(wide_tsikl) % 17 == 0) {
+				wide_tsikl = 1.0;
 			}
-
 			RectangleShape rectangle(Vector2f(16.f, 15.f));
 			RectangleShape rectangle2(Vector2f(5.f, 5.f));
+			
 			rectangle.move(hight_tsikl * 16, wide_tsikl * 15);
-
-			//std::cout << wide_tsikl << " " << hight_tsikl << std::endl;
-			// Устанавливаем ему цвет
-			if (map[i] == ' ') {
+			
+			if (map[int(i)] == ' ') {
 				rectangle.setFillColor(Color(0, 0, 0));
 			}
-				
-			if (map[i] != ' ') {
+			if (map[int(i)] != ' ') {
 				rectangle.setFillColor(Color(175, 180, 240));
 			}
-			if (player_x + player_y * map_w == i - 1) {				
-				rectangle2.move(hight_tsikl * 16, wide_tsikl * 15);
-			}
-				
-				
+			
+			//window.draw(rectangle3);
 			window.draw(rectangle);
 			window.draw(rectangle2);
 			
-			
 		}
-		// Отрисовка окна	
+		
+		int i = 0;
+		for (float j = player_a; j < player_a + 60; j++) {
+			i++;
+			range(player_x, player_y, player_a, map, map_w, i, j, ground, window, nastroyka);
+		}
+		// РћС‚СЂРёСЃРѕРІРєР° РѕРєРЅР°	
 		window.display();
 	}
-
 	return 0;
 }
