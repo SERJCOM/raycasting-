@@ -2,7 +2,7 @@
 #include <SFML/Graphics.hpp>
 #include <cstdint>
 #include <conio.h>
-
+#include<cmath>
 
 using namespace sf;
 
@@ -10,18 +10,27 @@ void raycasting() {
 
 }
 
-void range(float player_x, float player_y, float player_a, const char map[], size_t map_w, int i, float j, RectangleShape ground, RenderWindow& window, float nastroyka) {
+void range(float player_x, float player_y, float player_a, const char map[], size_t map_w, int i, float j, RectangleShape ground, RenderWindow& window, float vertical, int space, Texture texture) {
+	float past_len = 0;
+	
 	for (float c = 1; c < 20; c += 0.05) {
 		
 		float x = player_x + c * cos(j * 0.0175);
 		float y = player_y + c * sin(j * 0.0175);
-		
+		float tseliy_x;
 		if (map[int(x) + int(y) * map_w] != ' ')
-		{
-			RectangleShape lutch(Vector2f(3, y * nastroyka));
-			RectangleShape line_with_thickness(Vector2f(20.f, 600 / c));
-			line_with_thickness.setFillColor(Color(15 * (c + 20), 180, 140));
-			line_with_thickness.move(i * 20, 300 - 300 / c);
+		{	
+			float part_x = x;
+			RectangleShape lutch(Vector2f(3, y ));
+			RectangleShape line_with_thickness(Vector2f(20.f, 600/ c));
+			if (map[int(x) + int(y) * map_w] == '1'){ line_with_thickness.setFillColor(Color(100, 120, 3)); }
+			if (map[int(x) + int(y) * map_w] == '2') { line_with_thickness.setFillColor(Color(73, 26, 144)); }
+			else{ 
+				line_with_thickness.setTexture(&texture, false);
+				line_with_thickness.setTextureRect(IntRect(0, 0, 65 * (part_x - int(part_x)), 65));
+			}
+			line_with_thickness.move(i * 20, 300 - (300 - space * 300)/ c);
+			
 			lutch.move(player_x * 16, player_y * 16);
 			lutch.rotate(j - 60);
 			window.draw(lutch);
@@ -68,46 +77,38 @@ int main()
 	float player_x = 5;
 	float player_y = 1;
 	float player_a = 0;
-	float nastroyka = 1;
-	const float shag = 0.5;
+	float vertical = 0;
+	const float shag = 0.1;
+	int space = 0;
+	Texture texture;
+	texture.loadFromFile("D:\\step.png");
+	
+	
+	
 	// Главный цикл приложения. Выполняется, пока открыто окно
 	while (window.isOpen())
 	{
-		window.clear(Color(250, 220, 100, 0));
-		// Обрабатываем очередь событий в цикле
-		Event event;
-		while (window.pollEvent(event))
-		{
-			// Пользователь нажал на «крестик» и хочет закрыть окно?
-			if (event.type == Event::Closed) window.close();
-		}
-		if (Keyboard::isKeyPressed(Keyboard::A)) {
-			player_x = player_x - shag*cos(player_a * 0.0175);
-		} //первая координата Х отрицательна =>идём влево
-		if (Keyboard::isKeyPressed(Keyboard::D)) {
-			player_x = player_x + shag * cos(player_a * 0.0175);
-		} //первая координата Х положительна =>идём вправо
-		if (Keyboard::isKeyPressed(Keyboard::W)) {
-			player_y = player_y + shag * sin(player_a * 0.0175);
-		}
+		space = 0;
+		window.clear(Color(0, 0, 0, 0));
 		
-		if (Keyboard::isKeyPressed(Keyboard::S)) {
-			player_y = player_y - shag * sin(player_a * 0.0175);
-		}
-		if (Keyboard::isKeyPressed(Keyboard::Q)) {
-			player_a = player_a - 0.5;
-		}
-		if (Keyboard::isKeyPressed(Keyboard::E)) {
-			player_a = player_a + 0.5;
-		}
-		if (Keyboard::isKeyPressed(Keyboard::T)) {
-			nastroyka = nastroyka - 1;
-			
-		}
-		std::cout <<"НАСТРОЙКА" << nastroyka << std::endl;
-		if (Keyboard::isKeyPressed(Keyboard::R)) {
-			nastroyka = nastroyka + 1;
-		}
+		Event event;
+		
+		
+		// Отрисовка спрайта	 
+		
+		while (window.pollEvent(event))
+		{if (event.type == Event::Closed) window.close();}
+		if (Keyboard::isKeyPressed(Keyboard::A)) {player_x = player_x - shag*cos((player_a + 30) * 0.0175);player_y = player_y + shag * sin((player_a + 30) * 0.0175);} 
+		if (Keyboard::isKeyPressed(Keyboard::D)) {player_x = player_x + shag * cos((player_a + 30) * 0.0175);player_y = player_y - shag * sin((player_a + 30) * 0.0175);}
+		if (Keyboard::isKeyPressed(Keyboard::W)) {player_y = player_y + shag * sin((player_a + 30) * 0.0175);player_x = player_x + shag * cos((player_a + 30) * 0.0175);}
+		if (Keyboard::isKeyPressed(Keyboard::S)) { player_y = player_y - shag * sin((player_a + 30) * 0.0175);player_x = player_x - shag * cos((player_a + 30) * 0.0175); }
+		if (Keyboard::isKeyPressed(Keyboard::Q)) {player_a = player_a - 0.5;}
+		if (Keyboard::isKeyPressed(Keyboard::E)) {player_a = player_a + 0.5;}
+		std::cout << shag * cos(player_a * 0.0175) << " " <<  shag * sin(player_a * 0.0175) << std::endl;
+		//настройка
+		if (Keyboard::isKeyPressed(Keyboard::R)) { vertical = vertical + 1;}
+		if (Keyboard::isKeyPressed(Keyboard::T)) { vertical = vertical - 1; }
+		if (Keyboard::isKeyPressed(Keyboard::Space)) {space = 1;}
 
 		const int numindex = 256;
 		float wide_tsikl = 0;
@@ -147,8 +148,14 @@ int main()
 		int i = 0;
 		for (float j = player_a; j < player_a + 60; j++) {
 			i++;
-			range(player_x, player_y, player_a, map, map_w, i, j, ground, window, nastroyka);
+			range(player_x, player_y, player_a, map, map_w, i, j, ground, window, vertical,space, texture);
 		}
+		/* 
+		RectangleShape shape1(Vector2f(100, 100));
+		
+		shape1.move(0, 0);
+		shape1.setFillColor(Color(225, 225, 225));
+		window.draw(shape1);*/
 		// Отрисовка окна	
 		window.display();
 	}
